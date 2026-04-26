@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>にゃんこツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Serif+JP:wght@300;400;500&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --white:#ffffff;
+  --off:#faf9f6;
+  --paper:#f4f1eb;
+  --warm:#ede8df;
+  --line:#e0d9cf;
+  --line2:#ccc4b8;
+  --sage:#7a8c6e;
+  --sage-light:#eef2eb;
+  --terracotta:#c17a5c;
+  --terra-light:#f7ede6;
+  --blush:#e8c4b2;
+  --ink:#2c2520;
+  --ink2:#6b5f57;
+  --ink3:#a89d95;
+  --text:#3a3028;
+  --shadow:rgba(60,40,20,0.08);
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  font-family:'Lato',sans-serif;
+  background:var(--off);
+  color:var(--text);
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 0%,rgba(193,122,92,0.07) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 100%,rgba(122,140,110,0.08) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 50%,rgba(232,196,178,0.05) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+.deco-svg{position:fixed;pointer-events:none;z-index:0;opacity:0.16}
+.deco-tl{top:-10px;left:-10px;width:260px}
+.deco-br{bottom:-10px;right:-10px;width:220px;transform:rotate(180deg)}
+
+.container{max-width:540px;margin:0 auto;padding:0 1.25rem;position:relative;z-index:1}
+
+/* Header */
+.site-header{text-align:center;padding:3rem 1rem 0;position:relative;z-index:1}
+
+.paw-icon{font-size:2.8rem;display:block;margin-bottom:0.5rem;animation:gentleFloat 5s ease-in-out infinite;filter:drop-shadow(0 4px 14px rgba(193,122,92,0.2))}
+
+@keyframes gentleFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+
+h1{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:300;color:var(--ink);letter-spacing:0.08em;line-height:1}
+h1 em{font-style:italic;color:var(--terracotta)}
+
+.tagline{font-family:'Noto Serif JP',serif;font-size:0.72rem;color:var(--ink3);letter-spacing:0.2em;margin-top:0.5rem;font-weight:300}
+
+/* Tab */
+.tab-nav{display:flex;max-width:540px;margin:2rem auto 0;gap:0;border-bottom:1.5px solid var(--line);padding:0 1.25rem;position:relative;z-index:1}
+
+.tab-btn{
+  flex:1;padding:0.875rem 0.5rem;border:none;background:transparent;
+  color:var(--ink3);font-family:'Noto Serif JP',serif;font-size:0.85rem;font-weight:300;
+  letter-spacing:0.08em;cursor:pointer;transition:all 0.25s;position:relative;
+  display:flex;align-items:center;justify-content:center;gap:0.4rem;
+}
+.tab-btn::after{content:'';position:absolute;bottom:-1.5px;left:20%;right:20%;height:2px;background:var(--terracotta);border-radius:1px;opacity:0;transition:all 0.25s}
+.tab-btn:hover{color:var(--ink2)}
+.tab-btn.active{color:var(--terracotta)}
+.tab-btn.active::after{opacity:1;left:10%;right:10%}
+
+/* Pages */
+.page{display:none;padding:2rem 0 6rem}
+.page.active{display:block;animation:fadeIn 0.35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Cards */
+.card{
+  background:var(--white);border:1px solid var(--line);border-radius:20px;
+  padding:1.5rem 1.5rem 1.25rem;margin-bottom:1rem;
+  box-shadow:0 2px 16px var(--shadow);transition:box-shadow 0.2s,transform 0.2s;
+}
+.card:hover{box-shadow:0 4px 24px var(--shadow);transform:translateY(-1px)}
+.card:focus-within{border-color:var(--blush);box-shadow:0 4px 24px var(--shadow),0 0 0 3px rgba(193,122,92,0.07)}
+
+.section-label{
+  font-family:'Cormorant Garamond',serif;font-size:0.78rem;font-weight:400;
+  letter-spacing:0.18em;text-transform:uppercase;color:var(--ink3);
+  margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;
+}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+/* Weight */
+.weight-display{display:flex;align-items:baseline;gap:0.4rem;margin-bottom:1rem}
+.weight-num{font-family:'Cormorant Garamond',serif;font-size:4rem;font-weight:300;color:var(--terracotta);line-height:1;transition:color 0.3s}
+.weight-unit{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--ink3);font-weight:300}
+
+input[type="range"]{
+  -webkit-appearance:none;width:100%;height:3px;
+  background:linear-gradient(90deg,var(--terracotta) var(--pct,30%),var(--warm) var(--pct,30%));
+  border-radius:2px;outline:none;cursor:pointer;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:var(--white);border:2px solid var(--terracotta);cursor:pointer;
+  box-shadow:0 2px 8px rgba(193,122,92,0.25);transition:transform 0.15s,box-shadow 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2);box-shadow:0 4px 14px rgba(193,122,92,0.35)}
+
+.slider-ticks{display:flex;justify-content:space-between;padding:0 2px;margin-top:6px}
+.tick{font-size:0.63rem;color:var(--ink3)}
+
+/* Pills */
+.pill-group{display:flex;flex-wrap:wrap;gap:0.5rem}
+.pill{
+  padding:0.4rem 1rem;border-radius:999px;border:1px solid var(--line2);background:transparent;
+  color:var(--ink2);font-size:0.82rem;font-family:'Noto Serif JP',serif;font-weight:300;
+  cursor:pointer;transition:all 0.18s;white-space:nowrap;letter-spacing:0.04em;
+}
+.pill:hover{border-color:var(--terracotta);color:var(--terracotta);background:var(--terra-light)}
+.pill.active{background:var(--terracotta);border-color:var(--terracotta);color:#fff}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between}
+.toggle-label{font-size:0.88rem;color:var(--ink2);font-family:'Noto Serif JP',serif;font-weight:300}
+.toggle{position:relative;width:42px;height:23px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--warm);border-radius:12px;cursor:pointer;transition:background 0.2s;border:1px solid var(--line)}
+.toggle-slider::after{content:'';position:absolute;width:17px;height:17px;left:2px;top:2px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
+.toggle input:checked+.toggle-slider{background:var(--terracotta);border-color:var(--terracotta)}
+.toggle input:checked+.toggle-slider::after{transform:translateX(19px)}
+
+/* Kcal */
+.kcal-row{display:flex;align-items:center;gap:0.75rem;margin-top:0.75rem}
+.kcal-row+.kcal-row{margin-top:0.5rem}
+.kcal-label{font-size:0.82rem;color:var(--ink2);min-width:100px;font-family:'Noto Serif JP',serif;font-weight:300}
+input[type="number"]{
+  width:88px;padding:0.45rem 0.7rem;border:1px solid var(--line);border-radius:10px;
+  font-family:'Lato',sans-serif;font-size:0.9rem;color:var(--text);background:var(--off);
+  outline:none;text-align:right;transition:border-color 0.15s,box-shadow 0.15s;
+}
+input[type="number"]:focus{border-color:var(--terracotta);box-shadow:0 0 0 3px rgba(193,122,92,0.08)}
+.kcal-unit{font-size:0.78rem;color:var(--ink3)}
+
+/* Result */
+.result-card{
+  background:linear-gradient(135deg,#fff9f6 0%,#fff 60%);
+  border:1px solid var(--blush);border-radius:24px;
+  padding:2rem 1.75rem;margin-bottom:1rem;position:relative;overflow:hidden;
+  box-shadow:0 4px 32px rgba(193,122,92,0.1);
+}
+.result-card::before{content:'🌿';position:absolute;top:-10px;right:16px;font-size:5rem;opacity:0.06;transform:rotate(20deg);pointer-events:none}
+
+.result-title{font-family:'Cormorant Garamond',serif;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:1.5rem;font-style:italic}
+
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1.25rem}
+.result-item{text-align:center}
+.result-val{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;color:var(--ink);line-height:1;transition:all 0.4s}
+.result-val.hi{color:var(--terracotta)}
+.result-sub{font-size:0.7rem;color:var(--ink3);margin-top:0.3rem;letter-spacing:0.08em;font-family:'Noto Serif JP',serif;font-weight:300}
+.result-divider{width:40px;height:1px;background:var(--line);margin:1.25rem auto}
+
+.advice-box{background:var(--sage-light);border-left:2px solid var(--sage);border-radius:0 12px 12px 0;padding:0.875rem 1.1rem;font-size:0.82rem;color:var(--sage);line-height:1.7;font-family:'Noto Serif JP',serif;font-weight:300}
+.note{font-size:0.7rem;color:var(--ink3);text-align:center;line-height:1.7;font-family:'Noto Serif JP',serif;font-weight:300}
+
+/* Translator */
+.api-section{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 16px var(--shadow)}
+.api-row{display:flex;gap:0.5rem}
+.api-input{flex:1;background:var(--off);border:1px solid var(--line);border-radius:10px;padding:0.6rem 0.875rem;color:var(--text);font-size:0.8rem;font-family:'Lato',monospace;outline:none;transition:border-color 0.2s}
+.api-input:focus{border-color:var(--terracotta)}
+.api-input::placeholder{color:var(--ink3)}
+.btn-save{padding:0.6rem 1rem;background:var(--terracotta);color:#fff;border:none;border-radius:10px;font-size:0.82rem;font-family:'Noto Serif JP',serif;font-weight:400;cursor:pointer;transition:opacity 0.15s,transform 0.1s;white-space:nowrap;letter-spacing:0.05em}
+.btn-save:hover{opacity:0.85}
+.btn-save:active{transform:scale(0.97)}
+.api-hint{font-size:0.7rem;color:var(--ink3);margin-top:0.6rem;line-height:1.6;font-family:'Noto Serif JP',serif;font-weight:300}
+.api-hint a{color:var(--terracotta);text-decoration:none}
+
+.recorder-card{
+  background:var(--white);border:1px solid var(--line);border-radius:24px;
+  padding:2.25rem 1.5rem 1.75rem;margin-bottom:1rem;text-align:center;
+  box-shadow:0 2px 16px var(--shadow);position:relative;overflow:hidden;
+}
+.recorder-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blush),var(--terracotta),var(--blush));border-radius:24px 24px 0 0}
+
+.mic-outer{width:112px;height:112px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;position:relative;transition:border-color 0.2s}
+.mic-outer::before{content:'';position:absolute;inset:8px;border-radius:50%;background:var(--terra-light);transition:background 0.2s}
+.mic-outer.recording{border-color:var(--blush)}
+.mic-outer.recording::before{background:rgba(193,122,92,0.1)}
+
+.mic-btn{width:80px;height:80px;border-radius:50%;border:none;background:var(--terracotta);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:2rem;transition:all 0.2s;position:relative;z-index:1;box-shadow:0 4px 16px rgba(193,122,92,0.3)}
+.mic-btn:hover{transform:scale(1.05);box-shadow:0 6px 20px rgba(193,122,92,0.4)}
+.mic-btn:active{transform:scale(0.97)}
+.mic-btn.recording{animation:micPulse 1.5s ease-in-out infinite}
+@keyframes micPulse{0%,100%{box-shadow:0 4px 16px rgba(193,122,92,0.3)}50%{box-shadow:0 4px 28px rgba(193,122,92,0.5),0 0 0 8px rgba(193,122,92,0.08)}}
+
+.rec-status{font-size:0.82rem;color:var(--ink3);margin-bottom:0.4rem;min-height:1.4em;font-family:'Noto Serif JP',serif;font-weight:300}
+.rec-timer{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;color:var(--terracotta);min-height:2.2rem;display:block;margin-bottom:1rem;letter-spacing:0.1em}
+
+.waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:36px;margin-bottom:1.25rem}
+.bar{width:3px;border-radius:2px;background:var(--warm);transition:height 0.08s;height:5px}
+.bar.active{background:var(--terracotta)}
+
+.btn-translate{width:100%;padding:0.9rem;background:var(--white);color:var(--terracotta);border:1.5px solid var(--terracotta);border-radius:14px;font-size:0.92rem;font-family:'Noto Serif JP',serif;font-weight:400;letter-spacing:0.08em;cursor:pointer;transition:all 0.18s;display:none}
+.btn-translate:hover{background:var(--terracotta);color:#fff;box-shadow:0 4px 16px rgba(193,122,92,0.25)}
+.btn-translate:active{transform:scale(0.98)}
+.btn-translate:disabled{opacity:0.5;cursor:not-allowed}
+
+.trans-result{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:1.5rem;margin-bottom:1rem;display:none;animation:fadeIn 0.4s ease;box-shadow:0 2px 16px var(--shadow)}
+.result-header{display:flex;align-items:center;gap:0.875rem;margin-bottom:1.25rem}
+.cat-avatar{width:44px;height:44px;background:var(--terra-light);border:1px solid var(--blush);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.result-meta{font-size:0.68rem;letter-spacing:0.12em;color:var(--ink3);text-transform:uppercase;font-family:'Cormorant Garamond',serif}
+.emotion-badge{display:inline-block;padding:0.2rem 0.7rem;border-radius:999px;font-size:0.72rem;font-weight:400;margin-top:0.3rem;letter-spacing:0.06em;font-family:'Noto Serif JP',serif}
+
+.translation-text{font-size:0.95rem;line-height:1.8;color:var(--text);margin-bottom:1.1rem;padding:1rem 1.1rem;background:var(--off);border-radius:12px;border-left:2px solid var(--terracotta);font-family:'Noto Serif JP',serif;font-weight:300}
+
+.confidence-row{display:flex;align-items:center;gap:0.75rem;font-size:0.7rem;color:var(--ink3);font-family:'Cormorant Garamond',serif;letter-spacing:0.08em}
+.conf-bar{flex:1;height:3px;background:var(--warm);border-radius:2px;overflow:hidden}
+.conf-fill{height:100%;background:linear-gradient(90deg,var(--blush),var(--terracotta));border-radius:2px;transition:width 0.7s ease;width:0%}
+
+.loading{text-align:center;padding:2.5rem;display:none}
+.spinner{width:32px;height:32px;border:2px solid var(--warm);border-top-color:var(--terracotta);border-radius:50%;margin:0 auto 1rem;animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:0.8rem;color:var(--ink3);font-family:'Noto Serif JP',serif;font-weight:300;letter-spacing:0.1em}
+.loading-dots::after{content:'';animation:dots 1.5s steps(4,end) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
+
+.history-section{display:none;margin-top:0.25rem}
+.leaf-divider{text-align:center;font-size:0.9rem;color:var(--line2);margin:0.5rem 0 1.25rem;letter-spacing:0.5em;user-select:none}
+.history-title{font-family:'Cormorant Garamond',serif;font-size:0.75rem;letter-spacing:0.18em;color:var(--ink3);text-transform:uppercase;font-style:italic;margin-bottom:0.75rem}
+
+.history-item{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:0.875rem 1rem;margin-bottom:0.5rem;font-size:0.82rem;display:flex;gap:0.75rem;align-items:flex-start;box-shadow:0 1px 8px var(--shadow)}
+.history-emoji{font-size:1.3rem;flex-shrink:0;margin-top:1px}
+.history-translation{color:var(--ink2);line-height:1.6;font-family:'Noto Serif JP',serif;font-weight:300}
+.history-time{font-size:0.67rem;color:var(--ink3);margin-top:0.25rem;letter-spacing:0.06em}
+
+.error-box{background:rgba(220,80,80,0.05);border:1px solid rgba(220,80,80,0.2);border-radius:12px;padding:0.875rem 1rem;font-size:0.82rem;color:#c05050;margin-bottom:1rem;display:none;line-height:1.6;font-family:'Noto Serif JP',serif;font-weight:300}
+
+@media(max-width:400px){
+  h1{font-size:2rem}
+  .weight-num{font-size:3rem}
+  .result-val{font-size:2.2rem}
+  .tab-btn{font-size:0.78rem}
+}
+</style>
+</head>
+<body>
+
+<svg class="deco-svg deco-tl" viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M20,260 Q40,180 100,140 Q160,100 200,40" stroke="#7a8c6e" stroke-width="1.5" fill="none"/>
+  <ellipse cx="90" cy="155" rx="28" ry="14" fill="#7a8c6e" transform="rotate(-30 90 155)"/>
+  <ellipse cx="130" cy="118" rx="24" ry="11" fill="#c17a5c" opacity="0.65" transform="rotate(-50 130 118)"/>
+  <ellipse cx="165" cy="83" rx="20" ry="10" fill="#7a8c6e" transform="rotate(-65 165 83)"/>
+  <path d="M50,240 Q30,200 60,170 Q90,140 70,100" stroke="#c17a5c" stroke-width="1" fill="none" opacity="0.5"/>
+  <circle cx="58" cy="175" r="8" fill="#e8c4b2" opacity="0.7"/>
+  <circle cx="67" cy="148" r="5" fill="#c17a5c" opacity="0.4"/>
+</svg>
+
+<svg class="deco-svg deco-br" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M20,220 Q60,160 120,120 Q180,80 210,20" stroke="#7a8c6e" stroke-width="1.5" fill="none"/>
+  <ellipse cx="100" cy="135" rx="26" ry="12" fill="#7a8c6e" transform="rotate(-40 100 135)"/>
+  <ellipse cx="150" cy="95" rx="22" ry="10" fill="#c17a5c" opacity="0.55" transform="rotate(-60 150 95)"/>
+  <ellipse cx="185" cy="62" rx="18" ry="9" fill="#7a8c6e" transform="rotate(-70 185 62)"/>
+  <circle cx="80" cy="160" r="7" fill="#e8c4b2" opacity="0.6"/>
+</svg>
+
+<div class="site-header">
+  <span class="paw-icon">🐾</span>
+  <h1>にゃん<em>こ</em>ツール</h1>
+  <p class="tagline">あなたの猫のための、やさしいツール</p>
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('food',this)">🍚 ご飯の量</button>
+    <button class="tab-btn" onclick="switchTab('trans',this)">🎙 にゃん語翻訳</button>
+  </nav>
+</div>
+
+<!-- FOOD -->
+<div class="page active" id="page-food">
+  <div class="container">
+    <div class="card">
+      <span class="section-label">体重</span>
+      <div class="weight-display">
+        <span class="weight-num" id="weightNum">4.0</span>
+        <span class="weight-unit">kg</span>
+      </div>
+      <input type="range" id="weight" min="1" max="10" step="0.1" value="4" oninput="onWeight(this.value)">
+      <div class="slider-ticks">
+        <span class="tick">1kg</span><span class="tick">3kg</span><span class="tick">5kg</span><span class="tick">7kg</span><span class="tick">10kg</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="section-label">ライフステージ</span>
+      <div class="pill-group">
+        <button class="pill" onclick="setStage(this,'kitten',1.4)">子猫（〜1歳）</button>
+        <button class="pill active" onclick="setStage(this,'adult',0.8)">成猫（1〜7歳）</button>
+        <button class="pill" onclick="setStage(this,'senior',0.7)">シニア（7歳〜）</button>
+        <button class="pill" onclick="setStage(this,'pregnant',1.5)">妊娠・授乳中</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toggle-row">
+        <span class="toggle-label">避妊・去勢手術済み</span>
+        <label class="toggle">
+          <input type="checkbox" id="neutered" checked onchange="calc()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="section-label">餌の種類</span>
+      <div class="pill-group" style="margin-bottom:1.1rem">
+        <button class="pill active" onclick="setFood(this,'dry')">ドライのみ</button>
+        <button class="pill" onclick="setFood(this,'wet')">ウェットのみ</button>
+        <button class="pill" onclick="setFood(this,'mix')">ミックス（半々）</button>
+      </div>
+      <div id="dryRow" class="kcal-row">
+        <span class="kcal-label">ドライフード</span>
+        <input type="number" id="dryKcal" value="350" min="50" max="600" oninput="calc()">
+        <span class="kcal-unit">kcal / 100g</span>
+      </div>
+      <div id="wetRow" class="kcal-row" style="display:none">
+        <span class="kcal-label">ウェットフード</span>
+        <input type="number" id="wetKcal" value="80" min="20" max="300" oninput="calc()">
+        <span class="kcal-unit">kcal / 100g</span>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="result-title">1日の目安量</div>
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="result-val" id="calOut">—</div>
+          <div class="result-sub">kcal / 日</div>
+        </div>
+        <div class="result-item" id="dryItem">
+          <div class="result-val hi" id="dryOut">—</div>
+          <div class="result-sub">ドライ (g)</div>
+        </div>
+        <div class="result-item" id="wetItem" style="display:none">
+          <div class="result-val hi" id="wetOut">—</div>
+          <div class="result-sub">ウェット (g)</div>
+        </div>
+      </div>
+      <div class="result-divider"></div>
+      <div class="advice-box" id="advice"></div>
+    </div>
+    <p class="note">※ 一般的な目安です。フードのパッケージや獣医師の指示を優先してください。</p>
+  </div>
+</div>
+
+<!-- TRANSLATOR -->
+<div class="page" id="page-trans">
+  <div class="container">
+    <div class="api-section">
+      <span class="section-label">API キー</span>
+      <div class="api-row">
+        <input type="password" class="api-input" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off">
+        <button class="btn-save" onclick="saveKey()">保存</button>
+      </div>
+      <p class="api-hint"><a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> で取得できます。キーはこのブラウザ内にのみ保存されます。</p>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="recorder-card">
+      <span class="section-label">録音</span>
+      <div class="mic-outer" id="micOuter">
+        <button class="mic-btn" id="micBtn" onclick="toggleRecord()">🎤</button>
+      </div>
+      <p class="rec-status" id="recStatus">ボタンを押して録音開始</p>
+      <span class="rec-timer" id="recTimer"></span>
+      <div class="waveform" id="waveform"></div>
+      <button class="btn-translate" id="translateBtn" onclick="translate()">🐾 にゃん語を翻訳する</button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p class="loading-text">翻訳中<span class="loading-dots"></span></p>
+    </div>
+
+    <div class="trans-result" id="transResult">
+      <div class="result-header">
+        <div class="cat-avatar">🐱</div>
+        <div>
+          <div class="result-meta">翻訳結果</div>
+          <span class="emotion-badge" id="emotionBadge"></span>
+        </div>
+      </div>
+      <div class="translation-text" id="translationText"></div>
+      <div class="confidence-row">
+        <span>確信度</span>
+        <div class="conf-bar"><div class="conf-fill" id="confFill"></div></div>
+        <span id="confPct"></span>
+      </div>
+    </div>
+
+    <div class="history-section" id="historySection">
+      <div class="leaf-divider">— 🌿 —</div>
+      <p class="history-title">最近の翻訳</p>
+      <div id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('page-'+name).classList.add('active');
+}
+
+let stage='adult',stageFactor=0.8,food='dry';
+
+function onWeight(v){
+  const f=parseFloat(v);
+  document.getElementById('weightNum').textContent=f.toFixed(1);
+  document.getElementById('weight').style.setProperty('--pct',((f-1)/9*100).toFixed(1)+'%');
+  calc();
+}
+
+function setStage(btn,s,f){
+  stage=s;stageFactor=f;
+  btn.closest('.pill-group').querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');calc();
+}
+
+function setFood(btn,f){
+  food=f;
+  btn.closest('.pill-group').querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dryRow').style.display=f==='wet'?'none':'flex';
+  document.getElementById('wetRow').style.display=f==='dry'?'none':'flex';
+  document.getElementById('dryItem').style.display=f==='wet'?'none':'';
+  document.getElementById('wetItem').style.display=f==='dry'?'none':'';
+  calc();
+}
+
+function calc(){
+  const w=parseFloat(document.getElementById('weight').value);
+  const neutered=document.getElementById('neutered').checked;
+  const dryKcal=parseFloat(document.getElementById('dryKcal').value)||350;
+  const wetKcal=parseFloat(document.getElementById('wetKcal').value)||80;
+  const rer=70*Math.pow(w,0.75);
+  const nf=(neutered&&stage==='adult')?0.8:1.0;
+  const der=Math.round(rer*stageFactor*nf);
+  let dryG=0,wetG=0;
+  if(food==='dry')dryG=Math.round(der/dryKcal*100);
+  else if(food==='wet')wetG=Math.round(der/wetKcal*100);
+  else{dryG=Math.round(der*0.5/dryKcal*100);wetG=Math.round(der*0.5/wetKcal*100);}
+  document.getElementById('calOut').textContent=der;
+  if(food!=='wet')document.getElementById('dryOut').textContent=dryG;
+  if(food!=='dry')document.getElementById('wetOut').textContent=wetG;
+  const sl={kitten:'子猫',adult:'成猫',senior:'シニア猫',pregnant:'妊娠・授乳中の猫'}[stage];
+  let msg=`体重 ${w.toFixed(1)}kg の${sl}の目安は1日 ${der}kcal。`;
+  if(food==='dry')msg+=` ドライフード ${dryG}g が目安です。`;
+  else if(food==='wet')msg+=` ウェットフード ${wetG}g が目安です。`;
+  else msg+=` ドライ ${dryG}g＋ウェット ${wetG}g が目安です。`;
+  if(neutered&&stage==='adult')msg+='（去勢・避妊済みのため少なめに設定）';
+  document.getElementById('advice').textContent=msg;
+}
+
+onWeight(4);
+
+// Waveform
+const wf=document.getElementById('waveform');
+for(let i=0;i<22;i++){const b=document.createElement('div');b.className='bar';wf.appendChild(b);}
+
+let mediaRecorder=null,audioChunks=[],recording=false,timerInterval=null,seconds=0,analyser=null,animFrame=null,audioBlob=null;
+const history=[];
+
+function saveKey(){
+  const k=document.getElementById('apiKey').value.trim();
+  if(!k){showError('APIキーを入力してください');return}
+  if(!k.startsWith('sk-')){showError('正しい形式のAPIキーではありません');return}
+  localStorage.setItem('anthropic_key',k);
+  document.getElementById('apiKey').value='';
+  document.getElementById('apiKey').placeholder='✓ 保存済み';
+  hideError();
+}
+
+function getKey(){return localStorage.getItem('anthropic_key')||document.getElementById('apiKey').value.trim()}
+function showError(m){const b=document.getElementById('errorBox');b.textContent=m;b.style.display='block'}
+function hideError(){document.getElementById('errorBox').style.display='none'}
+
+async function toggleRecord(){if(!recording)await startRecord();else stopRecord();}
+
+async function startRecord(){
+  hideError();
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioChunks=[];
+    const ctx=new AudioContext();
+    const src=ctx.createMediaStreamSource(stream);
+    analyser=ctx.createAnalyser();analyser.fftSize=64;
+    src.connect(analyser);animateWave();
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
+    mediaRecorder.onstop=()=>{
+      audioBlob=new Blob(audioChunks,{type:'audio/webm'});
+      stream.getTracks().forEach(t=>t.stop());
+      ctx.close();cancelAnimationFrame(animFrame);resetBars();
+    };
+    mediaRecorder.start();recording=true;
+    document.getElementById('micBtn').classList.add('recording');
+    document.getElementById('micOuter').classList.add('recording');
+    document.getElementById('micBtn').textContent='⏹';
+    document.getElementById('recStatus').textContent='録音中… もう一度押すと停止';
+    document.getElementById('translateBtn').style.display='none';
+    seconds=0;
+    timerInterval=setInterval(()=>{
+      seconds++;
+      const m=Math.floor(seconds/60).toString().padStart(2,'0');
+      const s=(seconds%60).toString().padStart(2,'0');
+      document.getElementById('recTimer').textContent=`${m}:${s}`;
+      if(seconds>=30)stopRecord();
+    },1000);
+    document.getElementById('recTimer').textContent='00:00';
+  }catch(e){showError('マイクのアクセスが拒否されました。ブラウザの設定を確認してください。')}
+}
+
+function stopRecord(){
+  if(!mediaRecorder)return;
+  mediaRecorder.stop();recording=false;clearInterval(timerInterval);
+  document.getElementById('micBtn').classList.remove('recording');
+  document.getElementById('micOuter').classList.remove('recording');
+  document.getElementById('micBtn').textContent='🎤';
+  document.getElementById('recStatus').textContent='録音完了！翻訳ボタンを押してください';
+  if(seconds>0)document.getElementById('translateBtn').style.display='block';
+}
+
+function animateWave(){
+  if(!analyser)return;
+  const data=new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  wf.querySelectorAll('.bar').forEach((b,i)=>{
+    const v=data[i]||0;
+    b.style.height=Math.max(5,Math.min(30,v/4))+'px';
+    b.classList.toggle('active',v>20);
+  });
+  animFrame=requestAnimationFrame(animateWave);
+}
+
+function resetBars(){wf.querySelectorAll('.bar').forEach(b=>{b.style.height='5px';b.classList.remove('active')})}
+
+async function translate(){
+  const key=getKey();
+  if(!key){showError('APIキーを入力してください');return}
+  if(!audioBlob){showError('先に録音してください');return}
+  document.getElementById('translateBtn').disabled=true;
+  document.getElementById('transResult').style.display='none';
+  document.getElementById('loading').style.display='block';
+  hideError();
+  try{
+    const base64=await blobToBase64(audioBlob);
+    const b64=base64.split(',')[1];
+    const sys=`あなたは猫の鳴き声を日本語に翻訳する専門家です。音声データが与えられます。必ずJSON形式のみで返答してください:
+{"translation":"猫が言っていると思われる日本語（1〜3文、猫らしい口調で）","emotion":"感情（例:満足,空腹,甘え,警戒,眠い,遊びたい,不満）","confidence":0から100の数値,"emoji":"感情に合う絵文字1文字"}
+猫の声でない場合はtranslationに「猫の声が聞こえませんでした」と入れてください。JSONのみ返してください。`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,system:sys,
+        messages:[{role:'user',content:[{type:'text',text:'この音声を翻訳してください。'},{type:'document',source:{type:'base64',media_type:'audio/webm',data:b64}}]}]})
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||`APIエラー: ${res.status}`)}
+    const data=await res.json();
+    const txt=data.content.map(c=>c.text||'').join('');
+    let result;
+    try{result=JSON.parse(txt.replace(/```json|```/g,'').trim())}
+    catch{result={translation:txt,emotion:'不明',confidence:50,emoji:'🐱'}}
+    showTransResult(result);addHistory(result);
+  }catch(e){
+    showError('エラーが発生しました: '+e.message);
+  }finally{
+    document.getElementById('loading').style.display='none';
+    document.getElementById('translateBtn').disabled=false;
+  }
+}
+
+function showTransResult(r){
+  const cols={満足:'#5a8c5c',空腹:'#c17a5c',甘え:'#c06080',警戒:'#8c5a5a',眠い:'#7a6a9c',遊びたい:'#5a8c6c',不満:'#a0783c',不明:'#808080'};
+  const col=cols[r.emotion]||'#c17a5c';
+  const badge=document.getElementById('emotionBadge');
+  badge.textContent=`${r.emoji||'🐱'} ${r.emotion}`;
+  badge.style.cssText=`background:${col}18;color:${col};border:1px solid ${col}44`;
+  document.getElementById('translationText').textContent=r.translation;
+  document.getElementById('confPct').textContent=r.confidence+'%';
+  document.getElementById('confFill').style.width=r.confidence+'%';
+  document.getElementById('transResult').style.display='block';
+}
+
+function addHistory(r){
+  history.unshift(r);if(history.length>5)history.pop();
+  document.getElementById('historySection').style.display='block';
+  document.getElementById('historyList').innerHTML=history.map(h=>`
+    <div class="history-item">
+      <span class="history-emoji">${h.emoji||'🐱'}</span>
+      <div>
+        <div class="history-translation">${h.translation}</div>
+        <div class="history-time">${h.emotion} ・ 確信度 ${h.confidence}%</div>
+      </div>
+    </div>`).join('');
+}
+
+function blobToBase64(blob){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=()=>rej(new Error('音声の読み込みに失敗しました'));
+    r.readAsDataURL(blob);
+  });
+}
+
+if(localStorage.getItem('anthropic_key')){
+  document.getElementById('apiKey').placeholder='✓ 保存済み';
+}
+</script>
+</body>
+</html>
